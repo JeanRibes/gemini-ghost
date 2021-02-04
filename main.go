@@ -105,6 +105,8 @@ func handleConnection(conn io.ReadWriteCloser) {
 		workDir, _ = os.Getwd()
 		// Use this function to avoid directory traversal type attacks.
 		rootDir = http.Dir(workDir + strings.Replace(*contentDir, ".", "", -1))
+	} else {
+		rootDir = http.Dir(strings.Replace(*contentDir, ".", "", -1))
 	}
 
 	// Open the requested resource.
@@ -128,7 +130,6 @@ func handleConnection(conn io.ReadWriteCloser) {
 	if strings.HasSuffix(cleanPath, ".gmi") {
 		meta = "text/gemini; lang=en; charset=utf-8"
 	}
-
 	log.Println("Write response header")
 	sendResponseHeader(conn, statusSuccess, meta)
 

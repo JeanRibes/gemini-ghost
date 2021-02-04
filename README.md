@@ -23,7 +23,7 @@ Titan II is configured using command line arguments. Provided that you have `tit
 you can run it like so:
 
 ```sh
-titan2 -hostname my.site -dir ./certs/gemini -crt ./certs/crt.pem -key ./key.pem -port 1965
+titan2 -hostname my.site -dir ./gemini -crt ./certs/crt.pem -key ./key.pem -port 1965
 ```
 
 You can access the help to remind yourself of those options and what they mean via `titan2 -h`.
@@ -35,12 +35,15 @@ Rather than providing a full tutorial on these pages, I shall simply link to two
 Chris Were and [this](https://share.tube/videos/watch/a44503e9-efdf-48ea-a30d-f5eec00214db) by Uoou are both excellent.
 
 They demonstrate the process using [Agate](https://github.com/mbrubeck/agate), but it should be
-straightfoward to launch your Gemini capsule atop Titan II.
+straightfoward to adapt to launching your Gemini capsule atop Titan II. Most of what you need is
+in this reposity; it should be as simple as changing some of the configuration values to match
+your environment rather than mine.
 
 # Special Thanks
 
 Titan II takes inspiration from both [Go-Gemini](https://git.sr.ht/~yotam/go-gemini) and
-[Melchior](https://github.com/praetoriansentry/melchior) and, of course, the [Gemini spec](https://gemini.circumlunar.space/docs/specification.html) itself, which is a masterpiece in minimalism.
+[Melchior](https://github.com/praetoriansentry/melchior) and, of course, the 
+[Gemini spec](https://gemini.circumlunar.space/docs/specification.html) itself, which is a masterpiece of minimalism.
 
 A week or so ago, I was discovering Mastadon and ActivityPub, and thinking about building an ActivityPub
 server. Then, Gemini swept in and I was truly inspired. The focus on security, the minimalism, the philosophy
