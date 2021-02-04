@@ -1,0 +1,14 @@
+image: golang
+
+stages:
+  - build
+
+build:
+  stage: build
+  script:
+    - go build -o dist/linux/titan2
+  artifacts:
+    paths:
+      - dist/linux/titan2
+  only:
+    - master
