@@ -11,7 +11,7 @@ If you have `go` installed and a `GOPATH` configured, then clone the repo and ru
 
 ```sh
 git clone https://gitlab.com/lostleonardo/titan2.git
-cd podcat
+cd titan2
 go install
 ```
 
