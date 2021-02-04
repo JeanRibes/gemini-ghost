@@ -23,7 +23,7 @@ Titan II is configured using command line arguments. Provided that you have `tit
 you can run it like so:
 
 ```sh
-titan2 -hostname my.site -dir ./certs/gemini -crt ./certs/crt.pem -key ./crt.pem -port 1965
+titan2 -hostname my.site -dir ./certs/gemini -crt ./certs/crt.pem -key ./key.pem -port 1965
 ```
 
 You can access the help to remind yourself of those options and what they mean via `titan2 -h`.

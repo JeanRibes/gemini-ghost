@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=lostleonardo
 Type=simple
-Exec=/home/lostleonardo/bintitan2 -hostname my.site -dir /home/lostleonardo/gemini -crt /home/lostleonardo/certs/crt.pem -key /home/lostleonardo/certs/crt.pem -port 1965
+ExecStart=/home/lostleonardo/bin/titan2 -hostname my.site -dir /home/lostleonardo/gemini -crt /home/lostleonardo/certs/crt.pem -key /home/lostleonardo/certs/key.pem -port 1965
 
 [Install]
 WantedBy=default.target
