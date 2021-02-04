@@ -40,8 +40,7 @@ straightfoward to launch your Gemini capsule atop Titan II.
 # Special Thanks
 
 Titan II takes inspiration from both [Go-Gemini](https://git.sr.ht/~yotam/go-gemini) and
-[Melchior](https://github.com/praetoriansentry/melchior) and, of course, the [Gemini spec]() itself, which is
-a masterpiece in minimalism.
+[Melchior](https://github.com/praetoriansentry/melchior) and, of course, the [Gemini spec](https://gemini.circumlunar.space/docs/specification.html) itself, which is a masterpiece in minimalism.
 
 A week or so ago, I was discovering Mastadon and ActivityPub, and thinking about building an ActivityPub
 server. Then, Gemini swept in and I was truly inspired. The focus on security, the minimalism, the philosophy
