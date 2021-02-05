@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	hostname    = flag.String("hostname", "localhost", "hostname (required)")
+	hostname    = flag.String("hostname", "localhost", "hostname")
 	crtFilename = flag.String("crt", "./certs/crt.pem", "cert filename")
 	keyFilename = flag.String("key", "./certs/key.pem", "key filename")
 	contentDir  = flag.String("dir", "./gemini", "content directory")
