@@ -13,7 +13,7 @@ cd titan2
 go install
 ```
 
-Or you can download a prebuilt binary from the 'Releases' page of this project. 
+Or you can download a prebuilt Linux binary from the 'Releases' page of this project. 
 
 # Configuration
 
