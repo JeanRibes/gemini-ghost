@@ -43,7 +43,7 @@ func main() {
 	}
 
 	// Create TSL over TCP session.
-	cfg := &tls.Config{Certificates: []tls.Certificate{cert}, ServerName: *hostname}
+	cfg := &tls.Config{Certificates: []tls.Certificate{cert}, ServerName: *hostname, MinVersion: tls.VersionTLS12}
 	listener, err := tls.Listen("tcp", fmt.Sprintf(":%d", *port), cfg)
 	if err != nil {
 		log.Fatalf("Unable to listen: %s", err)
@@ -69,13 +69,14 @@ func serveGemini(listener net.Listener) {
 func handleConnection(conn io.ReadWriteCloser) {
 	defer conn.Close()
 
-	// Sanity check incoming request URL.
+	// Check the size of the request buffer
 	s := bufio.NewScanner(conn)
 	if len(s.Bytes()) > 1024 {
-		sendResponseHeader(conn, statusPermanentFailure, "URL exceeds maximum permitted length")
+		sendResponseHeader(conn, statusPermanentFailure, "Request exceeds maximum permitted length")
 		return
 	}
 
+	// Sanity check incoming request URL content.
 	if ok := s.Scan(); !ok {
 		sendResponseHeader(conn, statusPermanentFailure, "Request not valid")
 		return
@@ -93,6 +94,8 @@ func handleConnection(conn io.ReadWriteCloser) {
 	var reqPath string
 	if strings.HasSuffix(reqURL.Path, "/") {
 		reqPath = filepath.Join(reqURL.Path, "index.gmi")
+	} else if reqURL.Path == "" {
+		reqPath = "/"
 	} else {
 		reqPath = reqURL.Path
 	}
@@ -130,6 +133,7 @@ func handleConnection(conn io.ReadWriteCloser) {
 	if strings.HasSuffix(cleanPath, ".gmi") {
 		meta = "text/gemini; lang=en; charset=utf-8"
 	}
+
 	log.Println("Write response header")
 	sendResponseHeader(conn, statusSuccess, meta)
 
