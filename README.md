@@ -64,13 +64,12 @@ something, however, do please let me know.
 
 ## Input
 
-I don't envision using it for anything, at for the time being, and to be honest I'm not sure I understand
+I don't envision needing input for anything, for the time being, and to be honest I'm not sure I understand
 what the spec is trying to say.
 
 ## Redirects
 
-Likewise, I don't envision needing a server that implements redirects, and again, I'm
-not entirely sure how I would implement it.
+Likewise, I don't envision needing a server that implements redirects; it just doesn't fit my use case. I could probably add it if required. Would a text file that maps one path to a new redirect path fit the bill?
 
 ## Client Certs
 
