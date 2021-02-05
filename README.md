@@ -21,7 +21,7 @@ Titan II is configured using command line arguments. Provided that you have `tit
 you can run it like so:
 
 ```sh
-titan2 -hostname my.site -dir /home/ll/gemini -crt /home/ll/certs/crt.pem -key /home/ll/key.pem -port 1965
+titan2 -hostname my.site -dir /home/ll/gemini -crt /home/ll/certs/crt.pem -key /home/ll/certs/key.pem -port 1965
 ```
 
 You can access the help via `titan2 -h`.
@@ -34,7 +34,7 @@ Chris Were and [this](https://share.tube/videos/watch/a44503e9-efdf-48ea-a30d-f5
 
 They demonstrate the process using [Agate](https://github.com/mbrubeck/agate), but it should be
 straightfoward to adapt the steps. Most of what you need is
-in this reposity; simply change the configuration values to match your environment rather than mine.
+in this repository; simply change the configuration values to match your environment rather than mine.
 
 # Thanks
 
@@ -49,18 +49,18 @@ a protocol positioned somewhere between Mercury (Gopher) and Apollo (the Web). G
 
 In my little corner of cyberspace, there has been so much attention lavished on Gemini so quickly
 that I can't now remember (it's only been a week!) exactly where I first heard or read about it, but it was probably
-one of Chris Were, HexDSL and Uoou, who have produced some of the best videos on the subject.
+one of Chris Were, HexDSL or Uoou, who have produced some of the best videos on the subject.
 
 # Specification, I don't need no stinkin' specification
 
 Seriously though, the spec is obviously vital; none of the fun that people are having with servers
-and browsers and reading and writing content would be possible without the Gemini protocol.
+and browsers and reading and writing would be possible without the Gemini protocol.
 
-However, minimal as it is, there are parts of the spec that I simply do not need, for the time being at least. If I have overlooked anything essential, however, do please let me know.
+However, minimal as it is, there are parts of the spec that I do not need and, as result, I have simply not implemented them. If I have overlooked anything essential, however, do please let me know.
 
 ## Input
 
-I don't envision using input for anything, and to be honest I've not yet thought about how to implement this.
+I have no use for input at the moment and, to be honest, I am not entirely sure how it should work.
 
 ## Redirects
 
