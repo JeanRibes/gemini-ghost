@@ -78,4 +78,4 @@ The spec itself acknowledges that minimal implementations are unlikely to make u
 # Oh, just one more thing
 
 Titan II successfully lauched its first payload into Geminispace on 2021-02-04 at roughly 23:42 GMT. 
-My Gemini capsule is at: `gemini://log.lostleonardo.xyz`.
+My Gemini capsule is at: `gemini://gemini.lostleonardo.xyz`.
