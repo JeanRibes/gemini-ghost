@@ -1,7 +1,7 @@
 A minimal Gemini server written in Go. Launch your Gemini capsule atop a Titan II rocket.
 
 I did have the code down to 110 lines, including whitespace, but the addition of comments, 
-logging and a couple of very necessary security fixes have bloated the code to 160 lines. 
+logging and a couple of very necessary security fixes have bloated the code to 157 lines. 
 
 If you can see anything else that is obviously, please let me know.
 

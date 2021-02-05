@@ -92,10 +92,8 @@ func handleConnection(conn io.ReadWriteCloser) {
 	// If the URL ends with a '/' character, assume that the user wants the index.gmi
 	// file in the corresponding directory.
 	var reqPath string
-	if strings.HasSuffix(reqURL.Path, "/") {
+	if strings.HasSuffix(reqURL.Path, "/") || reqURL.Path == "" {
 		reqPath = filepath.Join(reqURL.Path, "index.gmi")
-	} else if reqURL.Path == "" {
-		reqPath = "/"
 	} else {
 		reqPath = reqURL.Path
 	}
