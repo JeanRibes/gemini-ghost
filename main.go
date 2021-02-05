@@ -69,7 +69,7 @@ func serveGemini(listener net.Listener) {
 func handleConnection(conn io.ReadWriteCloser) {
 	defer conn.Close()
 
-	// Check the size of the request buffer
+	// Check the size of the request buffer.
 	s := bufio.NewScanner(conn)
 	if len(s.Bytes()) > 1024 {
 		sendResponseHeader(conn, statusPermanentFailure, "Request exceeds maximum permitted length")
