@@ -33,9 +33,8 @@ Rather than provide a full tutorial on this page, I shall simply link to two of 
 Chris Were and [this](https://share.tube/videos/watch/a44503e9-efdf-48ea-a30d-f5eec00214db) by Uoou are both excellent.
 
 They demonstrate the process using [Agate](https://github.com/mbrubeck/agate), but it should be
-straightfoward to adapt the steps to launching your Gemini capsule atop Titan II. Most of what you need is
-in this reposity; changing the configuration values to match your environment rather than mine
-should get you most of the way.
+straightfoward to adapt the steps. Most of what you need is
+in this reposity; simply change the configuration values to match your environment rather than mine.
 
 # Thanks
 
@@ -54,18 +53,18 @@ one of Chris Were, HexDSL and Uoou, who have produced some of the best videos on
 
 # Specification, I don't need no stinkin' specification
 
-Seriously, the spec is obviously vital; none of the fun that people are having with servers
-and browsers and reading and writing would be possible without the Gemini protocol.
+Seriously though, the spec is obviously vital; none of the fun that people are having with servers
+and browsers and reading and writing content would be possible without the Gemini protocol.
 
-However, minimal as it is, there are parts of the spec that I simply don't need, for the time being. If I have overlooked anything essential, however, do please let me know.
+However, minimal as it is, there are parts of the spec that I simply do not need, for the time being at least. If I have overlooked anything essential, however, do please let me know.
 
 ## Input
 
-I don't envision needing input for anything, and to be honest I've not yet thought about how this would implemented.
+I don't envision using input for anything, and to be honest I've not yet thought about how to implement this.
 
 ## Redirects
 
-Likewise, I don't need a server that implements redirects; serving static content from a single folder. I could add redirects, if required. Would parsing a text file that maps an old URL to a new URL fit the bill?
+Likewise, I don't need a server that implements redirects; all I want to do is server static content from a single directory. I could add redirects, if required. Would parsing a text file that maps an old URL to a new URL fit the bill?
 
 ## Client Certs
 
