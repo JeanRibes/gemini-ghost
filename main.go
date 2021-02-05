@@ -35,7 +35,7 @@ var (
 func main() {
 	flag.Parse()
 
-	// Load TLS certificate - crt.pem and key.pem are the public and private
+	// Load TLS certificate - crt.pem and key.pem are the public and private key
 	// parts of a TLS certificate.
 	cert, err := tls.LoadX509KeyPair(*crtFilename, *keyFilename)
 	if err != nil {
@@ -119,7 +119,7 @@ func handleConnection(conn io.ReadWriteCloser) {
 	}
 	defer f.Close()
 
-	// Read the content from the file.
+	// Read the contents of the file.
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		sendResponseHeader(conn, statusPermanentFailure, "Resource could not be read")
