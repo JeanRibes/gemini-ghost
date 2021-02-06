@@ -49,22 +49,22 @@ a protocol positioned somewhere between Mercury (Gopher) and Apollo (the Web). G
 
 In my little corner of cyberspace, there has been so much attention lavished on Gemini so quickly
 that I can't now remember (it's only been a week!) exactly where I first heard or read about it, but it was probably
-one of Chris Were, HexDSL or Uoou, who have produced some of the best videos on the subject.
+one of the following: Chris Were, HexDSL or Uoou. Those guys have produced some of the best videos on the subject over the past couple of weeks.
 
 # Specification, I don't need no stinkin' specification
 
 Seriously though, the spec is obviously vital; none of the fun that people are having with servers
 and browsers and reading and writing would be possible without the Gemini protocol.
 
-However, minimal as it is, there are parts of the spec that I do not need and, as result, I have simply not implemented them. If I have overlooked anything essential, however, do please let me know.
+However, minimal as it is, there are parts of the spec that, for the time being, I do not need and, as result, I have not implemented them. If I have overlooked anything essential, however, do please let me know.
 
 ## Input
 
-I have no use for input at the moment and, to be honest, I am not entirely sure how it should work.
+I have no use for input at the moment and, to be honest, I need to read up on exactly how it is supposed to work.
 
 ## Redirects
 
-Likewise, I don't need a server that implements redirects; all I want to do is server static content from a single directory. I could add redirects, if required. Would parsing a text file that maps an old URL to a new URL fit the bill?
+Likewise, I don't have a for a server that implements redirects; I want to do is serve static content from a single directory. I could add redirects, if required. Would parsing a text file that maps an old URL path to a new URL path fit the bill?
 
 ## Client Certs
 
