@@ -56,15 +56,15 @@ one of the following: Chris Were, HexDSL or Uoou. Those guys have produced some 
 Seriously though, the spec is obviously vital; none of the fun that people are having with servers
 and browsers and reading and writing would be possible without the Gemini protocol.
 
-However, minimal as it is, there are parts of the spec that, for the time being, I do not need and, as result, I have not implemented them. If I have overlooked anything essential, however, do please let me know.
+However, minimal as it is, there are parts of the spec that, for the time being, I do not need and, as result, I have not implemented. If I have overlooked anything essential, however, do please let me know.
 
 ## Input
 
-I have no use for input at the moment and, to be honest, I need to read up on exactly how it is supposed to work.
+I have no use for input at the moment and, to be honest, I need to read up on exactly how it is should work.
 
 ## Redirects
 
-Likewise, I don't have a for a server that implements redirects; I want to do is serve static content from a single directory. I could add redirects, if required. Would parsing a text file that maps an old URL path to a new URL path fit the bill?
+Likewise, I don't need a server that implements redirects; all I want to do is serve static content from a single directory. I could add redirects, if required. Would parsing a text file that maps an old URL path to a new URL path fit the bill?
 
 ## Client Certs
 
