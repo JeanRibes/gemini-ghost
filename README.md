@@ -60,7 +60,7 @@ However, minimal as it is, there are parts of the spec that, for the time being,
 
 ## Input
 
-I have no use for input at the moment and, to be honest, I need to read up on exactly how it is should work.
+I have no use for input at the moment and, to be honest, I need to read up on exactly how it is supposed to work.
 
 ## Redirects
 
