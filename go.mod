@@ -1,3 +1,8 @@
-module lostleonardo.xyz/titan2
+module github.com/JeanRibes/ghost-gemini
 
 go 1.15
+
+require (
+	github.com/LukeEmmet/html2gemini v0.0.0-20211211205117-7a5e0baec07a
+	github.com/mattn/go-sqlite3 v1.14.10
+)

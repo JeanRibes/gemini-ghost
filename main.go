@@ -2,9 +2,13 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
+	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/LukeEmmet/html2gemini"
+	"github.com/mattn/go-sqlite3"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,7 +18,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+type Post struct {
+	title        string
+	slug         string
+	content      string
+	published_at time.Time
+}
 
 const (
 	statusInput            = 10
@@ -32,6 +44,13 @@ var (
 	port        = flag.Int("port", 1965, "port number")
 )
 
+var posts map[string]Post
+var h2gCtx *html2gemini.TextifyTraverseContext
+
+func init() {
+	posts = map[string]Post{}
+}
+
 func main() {
 	flag.Parse()
 
@@ -42,6 +61,16 @@ func main() {
 		log.Fatalf("Unable to load TLS certficate: %s", err)
 	}
 
+	h2gCtx = html2gemini.NewTraverseContext(*html2gemini.NewOptions())
+
+	sql.Register("sqlite3_with_extensions",
+		&sqlite3.SQLiteDriver{
+			Extensions: []string{
+				"sqlite3_mod_regexp",
+			},
+		})
+	loadDb()
+
 	// Create TSL over TCP session.
 	cfg := &tls.Config{Certificates: []tls.Certificate{cert}, ServerName: *hostname, MinVersion: tls.VersionTLS12}
 	listener, err := tls.Listen("tcp", fmt.Sprintf(":%d", *port), cfg)
@@ -51,6 +80,58 @@ func main() {
 	log.Printf("Listening for connections on port: %d", *port)
 
 	serveGemini(listener)
+}
+
+func loadDb() {
+	db, err := sql.Open("sqlite3", "file:ghost.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	conn, err := db.Conn(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	rows, err := conn.QueryContext(context.TODO(), "SELECT slug,title,html,published_at FROM posts WHERE status='published' AND type ='post'")
+	if err != nil {
+		log.Fatal("error", err)
+	}
+
+	for rows.Next() {
+		var slug string
+		var title string
+		var html string
+		var published_at string
+		rows.Scan(&slug, &title, &html, &published_at)
+		gmi, err := html2gemini.FromReader(strings.NewReader(html), *h2gCtx)
+		if err != nil {
+			log.Fatal("error", err)
+		}
+		pub_at, err := time.Parse("2006-01-02T15:04:05Z", published_at)
+		posts[slug] = Post{
+			title:        title,
+			slug:         slug,
+			content:      gmi,
+			published_at: pub_at,
+		}
+	}
+}
+
+func makeIndex() string {
+	s := "Posts\nThis listing is generated from the data of a Ghost blog\n"
+	for _, post := range posts {
+		year, month, day := post.published_at.Date()
+		s += fmt.Sprintf("=> %s %d-%d-%d %s\n",
+			post.slug,
+			year,
+			month,
+			day,
+			post.title)
+	}
+	return s + "happy reading !"
 }
 
 func serveGemini(listener net.Listener) {
@@ -84,8 +165,23 @@ func handleConnection(conn io.ReadWriteCloser) {
 
 	// Parse incoming request URL.
 	reqURL, err := url.Parse(s.Text())
+	println("path: ", reqURL.Path)
 	if err != nil {
 		sendResponseHeader(conn, statusPermanentFailure, "URL incorrectly formatted")
+		return
+	}
+
+	if reqURL.Path == "/" || reqURL.Path == "/index.gmi" || reqURL.Path == "" {
+		sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
+		sendResponseContent(conn, []byte(makeIndex()))
+		return
+	}
+
+	path := strings.Trim(reqURL.Path, "/")
+	println(path)
+	if post, ok := posts[path]; ok {
+		sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
+		sendResponseContent(conn, []byte(post.content))
 		return
 	}
 
