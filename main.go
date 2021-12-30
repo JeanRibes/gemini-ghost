@@ -9,14 +9,11 @@ import (
 	"fmt"
 	"github.com/LukeEmmet/html2gemini"
 	"github.com/mattn/go-sqlite3"
+	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -24,7 +21,6 @@ import (
 type Post struct {
 	title        string
 	slug         string
-	content      string
 	published_at time.Time
 }
 
@@ -40,7 +36,6 @@ var (
 	hostname    = flag.String("hostname", "localhost", "hostname")
 	crtFilename = flag.String("crt", "./certs/crt.pem", "cert filename")
 	keyFilename = flag.String("key", "./certs/key.pem", "key filename")
-	contentDir  = flag.String("dir", "./gemini", "content directory")
 	port        = flag.Int("port", 1965, "port number")
 )
 
@@ -63,12 +58,7 @@ func main() {
 
 	h2gCtx = html2gemini.NewTraverseContext(*html2gemini.NewOptions())
 
-	sql.Register("sqlite3_with_extensions",
-		&sqlite3.SQLiteDriver{
-			Extensions: []string{
-				"sqlite3_mod_regexp",
-			},
-		})
+	sql.Register("sqlite", &sqlite3.SQLiteDriver{})
 	loadDb()
 
 	// Create TSL over TCP session.
@@ -83,7 +73,7 @@ func main() {
 }
 
 func loadDb() {
-	db, err := sql.Open("sqlite3", "file:ghost.db")
+	db, err := sql.Open("sqlite", "file:ghost.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,7 +85,7 @@ func loadDb() {
 	}
 	defer conn.Close()
 
-	rows, err := conn.QueryContext(context.TODO(), "SELECT slug,title,html,published_at FROM posts WHERE status='published' AND type ='post'")
+	rows, err := conn.QueryContext(context.TODO(), "SELECT slug,title,published_at FROM posts WHERE status='published' AND type ='post'")
 	if err != nil {
 		log.Fatal("error", err)
 	}
@@ -103,35 +93,15 @@ func loadDb() {
 	for rows.Next() {
 		var slug string
 		var title string
-		var html string
 		var published_at string
-		rows.Scan(&slug, &title, &html, &published_at)
-		gmi, err := html2gemini.FromReader(strings.NewReader(html), *h2gCtx)
-		if err != nil {
-			log.Fatal("error", err)
-		}
-		pub_at, err := time.Parse("2006-01-02T15:04:05Z", published_at)
+		rows.Scan(&slug, &title, &published_at)
+		pub_at, _ := time.Parse("2006-01-02T15:04:05Z", published_at)
 		posts[slug] = Post{
 			title:        title,
 			slug:         slug,
-			content:      gmi,
 			published_at: pub_at,
 		}
 	}
-}
-
-func makeIndex() string {
-	s := "Posts\nThis listing is generated from the data of a Ghost blog\n"
-	for _, post := range posts {
-		year, month, day := post.published_at.Date()
-		s += fmt.Sprintf("=> %s %d-%d-%d %s\n",
-			post.slug,
-			year,
-			month,
-			day,
-			post.title)
-	}
-	return s + "happy reading !"
 }
 
 func serveGemini(listener net.Listener) {
@@ -141,7 +111,6 @@ func serveGemini(listener net.Listener) {
 		if err != nil {
 			continue
 		}
-		log.Println("Accept connection")
 
 		go handleConnection(conn)
 	}
@@ -165,76 +134,24 @@ func handleConnection(conn io.ReadWriteCloser) {
 
 	// Parse incoming request URL.
 	reqURL, err := url.Parse(s.Text())
-	println("path: ", reqURL.Path)
+	log.Printf("request path: %s\n", reqURL.Path)
 	if err != nil {
 		sendResponseHeader(conn, statusPermanentFailure, "URL incorrectly formatted")
 		return
 	}
 
 	if reqURL.Path == "/" || reqURL.Path == "/index.gmi" || reqURL.Path == "" {
-		sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
-		sendResponseContent(conn, []byte(makeIndex()))
+		ghostIndex(conn)
+		conn.Close()
 		return
 	}
 
-	path := strings.Trim(reqURL.Path, "/")
-	println(path)
-	if post, ok := posts[path]; ok {
-		sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
-		sendResponseContent(conn, []byte(post.content))
+	if ghostResponse(conn, strings.Trim(reqURL.Path, "/")) {
 		return
-	}
-
-	// If the URL ends with a '/' character, assume that the user wants the index.gmi
-	// file in the corresponding directory.
-	var reqPath string
-	if strings.HasSuffix(reqURL.Path, "/") || reqURL.Path == "" {
-		reqPath = filepath.Join(reqURL.Path, "index.gmi")
 	} else {
-		reqPath = reqURL.Path
+		sendResponseHeader(conn, statusPermanentFailure, "no content found at this address")
+		conn.Close()
 	}
-	cleanPath := filepath.Clean(reqPath)
-
-	// If the content directory is not specified as an absolute path, make it absolute.
-	var workDir string
-	var rootDir http.Dir
-	if !strings.HasPrefix(*contentDir, "/") {
-		workDir, _ = os.Getwd()
-		// Use this function to avoid directory traversal type attacks.
-		rootDir = http.Dir(workDir + strings.Replace(*contentDir, ".", "", -1))
-	} else {
-		rootDir = http.Dir(strings.Replace(*contentDir, ".", "", -1))
-	}
-
-	// Open the requested resource.
-	log.Printf("Path: %s", cleanPath)
-	f, err := rootDir.Open(cleanPath)
-	if err != nil {
-		sendResponseHeader(conn, statusPermanentFailure, "Resource not found")
-		return
-	}
-	defer f.Close()
-
-	// Read the contents of the file.
-	content, err := ioutil.ReadAll(f)
-	if err != nil {
-		sendResponseHeader(conn, statusPermanentFailure, "Resource could not be read")
-		return
-	}
-
-	// Determine MIME type.
-	meta := http.DetectContentType(content)
-	if strings.HasSuffix(cleanPath, ".gmi") {
-		meta = "text/gemini; lang=en; charset=utf-8"
-	}
-
-	log.Println("Write response header")
-	sendResponseHeader(conn, statusSuccess, meta)
-
-	log.Println("Write content")
-	sendResponseContent(conn, content)
-
-	log.Println("Close connection")
 }
 
 func sendResponseHeader(conn io.ReadWriteCloser, statusCode int, meta string) {
@@ -250,4 +167,107 @@ func sendResponseContent(conn io.ReadWriteCloser, content []byte) {
 	if err != nil {
 		log.Printf("There was an error writing to the connection: %s", err)
 	}
+}
+
+func ghostResponse(conn io.ReadWriteCloser, path string) bool {
+	db, err := sql.Open("sqlite", "file:ghost.db")
+	if err != nil {
+		println(err)
+		return false
+	}
+	defer db.Close()
+
+	dconn, err := db.Conn(context.TODO())
+	if err != nil {
+		println(err)
+		return false
+	}
+	defer dconn.Close()
+
+	rows, err := dconn.QueryContext(context.TODO(), "SELECT html FROM posts WHERE status='published' AND type ='post' AND slug=?", path)
+	if err != nil {
+		log.Fatal("error", err)
+	}
+
+	rows.Next()
+	var html string
+	err = rows.Scan(&html)
+	if err != nil {
+		println(err.Error())
+		return false
+	}
+	gmi, err := html2gemini.FromReader(strings.NewReader(html), *h2gCtx)
+	if err != nil {
+		return false
+	}
+	sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
+	sendResponseContent(conn, []byte(gmi))
+	conn.Close()
+	return true
+}
+
+type IndexData struct {
+	Posts []IndexPost
+}
+
+type IndexPost struct {
+	Slug  string
+	Title string
+	Date  string
+}
+
+func ghostIndex(conn io.ReadWriteCloser) bool {
+	db, err := sql.Open("sqlite", "file:ghost.db")
+	if err != nil {
+		println(err)
+		return false
+	}
+	defer db.Close()
+
+	dconn, err := db.Conn(context.TODO())
+	if err != nil {
+		println(err)
+		return false
+	}
+	defer dconn.Close()
+
+	rows, err := dconn.QueryContext(context.TODO(), "SELECT slug,title,published_at FROM posts WHERE status='published' AND type ='post'")
+	if err != nil {
+		log.Fatal("error", err)
+	}
+	posts := []IndexPost{}
+	for rows.Next() {
+		var slug string
+		var title string
+		var published_at string
+		err = rows.Scan(&slug, &title, &published_at)
+		if err != nil {
+			println(err.Error())
+			return false
+		}
+		date, _ := time.Parse("2006-01-02T15:04:05Z", published_at)
+		if err != nil {
+			return false
+		}
+		year, month, day := date.Date()
+		post := IndexPost{
+			Slug:  slug,
+			Title: title,
+			Date:  fmt.Sprintf("%d-%d-%d", year, month, day),
+		}
+		posts = append(posts, post)
+	}
+
+	tmpl, err := template.ParseFiles("index.tpl")
+	if err != nil {
+		println(err.Error())
+		return false
+	}
+	sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
+	err = tmpl.Execute(conn, IndexData{Posts: posts})
+	if err != nil {
+		println(err.Error())
+		return false
+	}
+	return true
 }
