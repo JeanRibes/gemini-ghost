@@ -8,10 +8,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/LukeEmmet/html2gemini"
-	"github.com/mattn/go-sqlite3"
 	"html/template"
 	"io"
 	"log"
+	_ "modernc.org/sqlite"
 	"net"
 	"net/url"
 	"strings"
@@ -37,14 +37,10 @@ var (
 	crtFilename = flag.String("crt", "./certs/crt.pem", "cert filename")
 	keyFilename = flag.String("key", "./certs/key.pem", "key filename")
 	port        = flag.Int("port", 1965, "port number")
+	dbfile      = flag.String("dbfile", "ghost.db", "SQLITE file to use")
 )
 
-var posts map[string]Post
 var h2gCtx *html2gemini.TextifyTraverseContext
-
-func init() {
-	posts = map[string]Post{}
-}
 
 func main() {
 	flag.Parse()
@@ -58,8 +54,9 @@ func main() {
 
 	h2gCtx = html2gemini.NewTraverseContext(*html2gemini.NewOptions())
 
-	sql.Register("sqlite", &sqlite3.SQLiteDriver{})
-	loadDb()
+	db, dconn := openDb()
+	dconn.Close()
+	db.Close()
 
 	// Create TSL over TCP session.
 	cfg := &tls.Config{Certificates: []tls.Certificate{cert}, ServerName: *hostname, MinVersion: tls.VersionTLS12}
@@ -70,38 +67,6 @@ func main() {
 	log.Printf("Listening for connections on port: %d", *port)
 
 	serveGemini(listener)
-}
-
-func loadDb() {
-	db, err := sql.Open("sqlite", "file:ghost.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	conn, err := db.Conn(context.TODO())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	rows, err := conn.QueryContext(context.TODO(), "SELECT slug,title,published_at FROM posts WHERE status='published' AND type ='post'")
-	if err != nil {
-		log.Fatal("error", err)
-	}
-
-	for rows.Next() {
-		var slug string
-		var title string
-		var published_at string
-		rows.Scan(&slug, &title, &published_at)
-		pub_at, _ := time.Parse("2006-01-02T15:04:05Z", published_at)
-		posts[slug] = Post{
-			title:        title,
-			slug:         slug,
-			published_at: pub_at,
-		}
-	}
 }
 
 func serveGemini(listener net.Listener) {
@@ -169,22 +134,26 @@ func sendResponseContent(conn io.ReadWriteCloser, content []byte) {
 	}
 }
 
-func ghostResponse(conn io.ReadWriteCloser, path string) bool {
-	db, err := sql.Open("sqlite", "file:ghost.db")
+func openDb() (*sql.DB, *sql.Conn) {
+	db, err := sql.Open("sqlite", *dbfile)
 	if err != nil {
-		println(err)
-		return false
+		log.Panicf("error opening database %s: %s\n", *dbfile, err)
 	}
+
+	conn, err := db.Conn(context.TODO())
+	if err != nil {
+		log.Panicf("error opening database %s: %s\n", *dbfile, err)
+	}
+	return db, conn
+}
+
+func ghostResponse(conn io.ReadWriteCloser, path string) bool {
+	db, dconn := openDb()
+	defer dconn.Close()
 	defer db.Close()
 
-	dconn, err := db.Conn(context.TODO())
-	if err != nil {
-		println(err)
-		return false
-	}
-	defer dconn.Close()
-
-	rows, err := dconn.QueryContext(context.TODO(), "SELECT html FROM posts WHERE status='published' AND type ='post' AND slug=?", path)
+	rows, err := dconn.QueryContext(context.TODO(),
+		"SELECT html FROM posts WHERE status='published' AND type ='post' AND slug=?", path)
 	if err != nil {
 		log.Fatal("error", err)
 	}
@@ -217,21 +186,12 @@ type IndexPost struct {
 }
 
 func ghostIndex(conn io.ReadWriteCloser) bool {
-	db, err := sql.Open("sqlite", "file:ghost.db")
-	if err != nil {
-		println(err)
-		return false
-	}
+	db, dconn := openDb()
+	defer dconn.Close()
 	defer db.Close()
 
-	dconn, err := db.Conn(context.TODO())
-	if err != nil {
-		println(err)
-		return false
-	}
-	defer dconn.Close()
-
-	rows, err := dconn.QueryContext(context.TODO(), "SELECT slug,title,published_at FROM posts WHERE status='published' AND type ='post'")
+	rows, err := dconn.QueryContext(context.TODO(),
+		"SELECT slug,title,published_at FROM posts WHERE status='published' AND type ='post' ORDER BY published_at DESC ")
 	if err != nil {
 		log.Fatal("error", err)
 	}

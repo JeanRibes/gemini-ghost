@@ -17,5 +17,8 @@ RUN cd geminighost && go build -o /main
 
 #FROM alpine
 #COPY --from=builder /main .
-
+EXPOSE 1965
+WORKDIR /
+RUN adduser -DHu 1000 grissom
+USER grissom
 CMD ["/main"]

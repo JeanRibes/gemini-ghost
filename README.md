@@ -1,16 +1,18 @@
-A minimal Gemini server written in Go. Launch your Gemini capsule atop a Titan II rocket.
+```
+docker build -t gg .
+docker run --rm -p 1965:1965 -v $(pwd)/certs:/certs gg
+```
 
-I did have Titan II down to 110 lines, including whitespace, but the addition of comments, 
-logging and a couple of very necessary security fixes have subsequently bloated the code to 157 lines. 
 
+A Gemini dynamic server that serves content from the SQLite database of a [Ghost](https://ghost.org/) installation.
+
+Based on the work of [lostleonardo's titan2](https://gitlab.com/lostleonardo/titan2.git)
 # Installation
 
 If you have `go` installed and a `GOPATH` configured, then clone the repo and run `go install`:
 
 ```sh
-git clone https://gitlab.com/lostleonardo/titan2.git
-cd titan2
-go install
+go install github.com/JeanRibes/gemini-ghost@master
 ```
 
 Or you can download a prebuilt Linux binary from the 'Releases' page of this project. 
