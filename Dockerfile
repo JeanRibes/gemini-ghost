@@ -1,19 +1,18 @@
 FROM golang:1.17-alpine as builder
 
-WORKDIR /go/src
-RUN mkdir -p geminighost
+WORKDIR /go/src/gemini-ghost
 
 
-COPY go.mod geminighost
-COPY go.sum geminighost
+COPY go.mod .
+COPY go.sum .
 
 # téléchargement des dépendances
-RUN cd geminighost && go mod download
+RUN go mod download
 
-COPY *.go /go/src/geminighost/
+COPY *.go .
 
 # build Go
-RUN cd geminighost && go build -o /main
+RUN go build -o /main
 
 #FROM alpine
 #COPY --from=builder /main .
@@ -21,4 +20,4 @@ EXPOSE 1965
 WORKDIR /
 RUN adduser -DHu 1000 grissom
 USER grissom
-CMD ["/main"]
+CMD ["/main","-crt","/certs/crt.pem","-key","/certs/key.pem", "-dbfile", "/ghost.db", "-hostname", "localhost", "-port", "1965"]

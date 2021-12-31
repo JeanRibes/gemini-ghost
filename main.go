@@ -18,12 +18,6 @@ import (
 	"time"
 )
 
-type Post struct {
-	title        string
-	slug         string
-	published_at time.Time
-}
-
 const (
 	statusInput            = 10
 	statusSuccess          = 20
@@ -31,6 +25,16 @@ const (
 	statusTemporaryFailure = 40
 	statusPermanentFailure = 50
 )
+
+type IndexData struct {
+	Posts []IndexPost
+}
+
+type IndexPost struct {
+	Slug  string
+	Title string
+	Date  string
+}
 
 var (
 	hostname    = flag.String("hostname", "localhost", "hostname")
@@ -173,16 +177,6 @@ func ghostResponse(conn io.ReadWriteCloser, path string) bool {
 	sendResponseContent(conn, []byte(gmi))
 	conn.Close()
 	return true
-}
-
-type IndexData struct {
-	Posts []IndexPost
-}
-
-type IndexPost struct {
-	Slug  string
-	Title string
-	Date  string
 }
 
 func ghostIndex(conn io.ReadWriteCloser) bool {

@@ -1,4 +1,4 @@
-module github.com/JeanRibes/ghost-gemini
+module github.com/JeanRibes/gemini-ghost
 
 go 1.15
 
