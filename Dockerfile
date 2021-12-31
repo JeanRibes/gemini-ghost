@@ -20,4 +20,5 @@ EXPOSE 1965
 WORKDIR /
 RUN adduser -DHu 1000 grissom
 USER grissom
+ADD index.tpl /
 CMD ["/main","-crt","/certs/crt.pem","-key","/certs/key.pem", "-dbfile", "/ghost.db", "-hostname", "localhost", "-port", "1965"]
