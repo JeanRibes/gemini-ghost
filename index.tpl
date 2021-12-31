@@ -1,4 +1,4 @@
-My gemlog posts
+Ghost blog on Gemini
 # Posts
 {{range .Posts}}=> {{.Slug}} {{.Title}} {{.Date}}
 {{end}}
