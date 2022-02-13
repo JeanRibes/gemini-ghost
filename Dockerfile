@@ -21,4 +21,6 @@ WORKDIR /
 RUN adduser -DHu 1000 grissom
 USER grissom
 ADD index.tpl /
-CMD ["/main","-crt","/certs/crt.pem","-key","/certs/key.pem", "-dbfile", "/ghost.db", "-hostname", "localhost", "-port", "1965"]
+ENV URL "http://localhost:2368/ghost/api/v4/content/posts/"
+ENV API_KEY "get from ghost admin -> new integration -> content api key"
+CMD ["/main","-crt","/certs/crt.pem","-key","/certs/key.pem", "-hostname", "localhost", "-port", "1965"]

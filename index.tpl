@@ -1,10 +1,13 @@
 Ghost blog on Gemini
 # Posts
-{{range .Posts}}=> {{.Slug}} {{.Title}} {{.Date}}
+{{$df := .DateF}}
+{{range .Posts}}=> /{{.Slug}} {{.Title}}
+{{.Excerpt}}
+Published at {{call $df .PublishedAt }}
 {{end}}
 
 Happy reading !
 
 ```
-Generated on the fly from the Ghost SQLite database
+Generated from the Ghost API
 ```
