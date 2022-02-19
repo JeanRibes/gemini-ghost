@@ -1,33 +1,35 @@
 package main
 
 import (
+	"github.com/JeanRibes/gemini-ghost/ghost"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/pitr/gig"
 	"html/template"
-	"io"
+	"log"
 	"time"
 )
 
-func ghostResponse(conn io.ReadWriteCloser, path string) bool {
-	post, exists := db.Posts[path]
+func ghostContent(c gig.Context) error {
+	slug := c.Param("slug")
+	post, exists := db.Posts[slug]
 	if !exists {
-		post, exists = db.Pages[path]
+		post, exists = db.Pages[slug]
 	}
 	if !exists {
-		return false
+		return c.NoContent(gig.StatusTemporaryFailure, "no post or page here :(")
 	}
-	sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
-	sendResponseContent(conn, []byte(post.Content))
-	conn.Close()
-	return true
+	return c.Gemini(post.Content)
 }
 
-func ghostIndex(conn io.ReadWriteCloser) bool {
+func ghostIndex(c gig.Context) error {
 	tmpl, err := template.ParseFiles("index.tpl")
 	if err != nil {
-		println(err.Error())
-		return false
+		return err
 	}
-	sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
-	err = tmpl.Execute(conn, map[string]interface{}{
+	if err := c.Response().WriteHeader(gig.StatusSuccess, gig.MIMETextGemini); err != nil {
+		return err
+	}
+	return tmpl.Execute(c.Response().Writer, map[string]interface{}{
 		"Posts":    db.Posts,
 		"Pages":    db.Pages,
 		"Settings": db.Settings,
@@ -35,9 +37,40 @@ func ghostIndex(conn io.ReadWriteCloser) bool {
 			return date.Format(time.ANSIC)
 		},
 	})
+}
+
+func searchPost(c gig.Context) error {
+	query := input_helper(c, "Your query ?")
+	results, err := index.Search(bleve.NewSearchRequest(bleve.NewMatchQuery(query)))
 	if err != nil {
 		println(err.Error())
-		return false
+		return err
 	}
-	return true
+	log.Println(results.String())
+
+	posts := []StoredPost{}
+
+	for _, result := range results.Hits {
+		println("id:", result.ID)
+		if post, exists := db.Posts[result.ID]; exists {
+			posts = append(posts, post)
+		}
+	}
+
+	tmpl, err := template.ParseFiles("index.tpl")
+	if err != nil {
+		return err
+	}
+	if err := c.Response().WriteHeader(gig.StatusSuccess, gig.MIMETextGemini); err != nil {
+		return err
+	}
+	return tmpl.Execute(c.Response().Writer, map[string]interface{}{
+		"Posts":    posts,
+		"Pages":    []ghost.Page{},
+		"Settings": db.Settings,
+		"DateF": func(date time.Time) string {
+			return date.Format(time.ANSIC)
+		},
+	})
+
 }

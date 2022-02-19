@@ -1,6 +1,7 @@
 # {{.Settings.Title}}
 {{.Settings.Description}}
 
+=> /search Search
 
 {{range .Settings.Navigation }}=> {{.URL}} {{.Label}}
 {{end}}
@@ -11,6 +12,7 @@
 {{.Excerpt}}
 Published at {{call $df .PublishedAt }}
 {{end}}
+
 
 {{range .Settings.SecondaryNavigation }}=> {{.URL}} {{.Label}}
 {{end}}

@@ -1,8 +1,7 @@
 A Gemini dynamic server that serves content from the Content API of a [Ghost](https://ghost.org/) installation. It
-fetches all the posts, and serves them by converting the HTML content into Gemini
+fetches all the posts, and serves them by converting the HTML content into Gemini.
 
-Based on the work of [lostleonardo's titan2](https://gitlab.com/lostleonardo/titan2.git)
-, [gemini://gemini.lostleonardo.xyz](gemini://gemini.lostleonardo.xyz)
+The content is cached in memory, and is refreshed every hour.
 
 HTML-to-GMI conversion is done with [github.com/LukeEmmet/html2gemini](https://github.com/LukeEmmet/html2gemini)
 
