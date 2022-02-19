@@ -26,13 +26,14 @@ var (
 	crtFilename = flag.String("crt", "./certs/crt.pem", "cert filename")
 	keyFilename = flag.String("key", "./certs/key.pem", "key filename")
 	port        = flag.Int("port", 1965, "port number")
+
+	ghostUrl = flag.String("ghost-url", "http://localhost:2368/ghost/api/v4/content", "Ghost Content API Url")
+	ghostKey = flag.String("ghost-key", "a513a3dc949855fb654a545bd7", "Ghost Content API Key")
 )
 
-var db map[string]*StoredPost
-
 func main() {
-	go contentFetcher()
 	flag.Parse()
+	go contentFetcher(*ghostUrl, *ghostKey)
 
 	// Load TLS certificate - crt.pem and key.pem are the public and private key
 	// parts of a TLS certificate.

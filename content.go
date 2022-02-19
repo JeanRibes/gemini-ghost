@@ -1,68 +1,43 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/JeanRibes/gemini-ghost/ghost"
 	"github.com/LukeEmmet/html2gemini"
 	"log"
-	"net/http"
-	"os"
 	"time"
 )
 
-const API_KEY = "API_KEY"
-const URL = "URL"
-
-type GhostPost struct {
-	ID                   string      `json:"id"`
-	UUID                 string      `json:"uuid"`
-	Title                string      `json:"title"`
-	Slug                 string      `json:"slug"`
-	HTML                 string      `json:"html"`
-	CommentID            string      `json:"comment_id"`
-	FeatureImage         string      `json:"feature_image"`
-	Featured             bool        `json:"featured"`
-	Visibility           string      `json:"visibility"`
-	EmailRecipientFilter string      `json:"email_recipient_filter"`
-	CreatedAt            time.Time   `json:"created_at"`
-	UpdatedAt            time.Time   `json:"updated_at"`
-	PublishedAt          time.Time   `json:"published_at"`
-	CustomExcerpt        string      `json:"custom_excerpt"`
-	CodeinjectionHead    interface{} `json:"codeinjection_head"`
-	CodeinjectionFoot    interface{} `json:"codeinjection_foot"`
-	CustomTemplate       interface{} `json:"custom_template"`
-	CanonicalURL         interface{} `json:"canonical_url"`
-	URL                  string      `json:"url"`
-	Excerpt              string      `json:"excerpt"`
-	ReadingTime          int         `json:"reading_time"`
-	Access               bool        `json:"access"`
-	OgImage              interface{} `json:"og_image"`
-	OgTitle              interface{} `json:"og_title"`
-	OgDescription        interface{} `json:"og_description"`
-	TwitterImage         interface{} `json:"twitter_image"`
-	TwitterTitle         interface{} `json:"twitter_title"`
-	TwitterDescription   interface{} `json:"twitter_description"`
-	MetaTitle            interface{} `json:"meta_title"`
-	MetaDescription      interface{} `json:"meta_description"`
-	EmailSubject         interface{} `json:"email_subject"`
-	Frontmatter          interface{} `json:"frontmatter"`
-	FeatureImageAlt      interface{} `json:"feature_image_alt"`
-	FeatureImageCaption  interface{} `json:"feature_image_caption"`
-	Plaintext            string      `json:"plaintext,omitempty"`
+type LocalDB struct {
+	Posts    map[string]StoredPost
+	Pages    map[string]StoredPost
+	Settings ghost.Settings
 }
 
-type GhostContent struct {
-	Posts []GhostPost `json:"posts"`
-	Meta  struct {
-		Pagination struct {
-			Page  int `json:"page"`
-			Limit int `json:"limit"`
-			Pages int `json:"pages"`
-			Total int `json:"total"`
-			Next  int `json:"next"`
-			Prev  int `json:"prev"`
-		} `json:"pagination"`
-	} `json:"meta"`
+var db LocalDB
+
+func contentFetcher(baseurl string, key string) {
+	api := ghost.New(baseurl, key)
+	for {
+		posts, err := api.AllPosts()
+		if err != nil {
+			log.Println(err)
+		}
+		pages, err := api.AllPages()
+		if err != nil {
+			log.Println(err)
+		}
+		settings, err := api.Settings()
+		if err != nil {
+			log.Println(err)
+		}
+		if err == nil {
+			db.Posts = convertposts(posts)
+			db.Pages = convertpages(pages)
+			db.Settings = *settings
+		}
+
+		time.Sleep(1 * time.Hour)
+	}
 }
 
 type StoredPost struct {
@@ -74,7 +49,23 @@ type StoredPost struct {
 	Excerpt string
 }
 
-func convertpost(post *GhostPost) *StoredPost {
+func convertposts(posts []ghost.Post) map[string]StoredPost {
+	out := map[string]StoredPost{}
+	for _, post := range posts {
+		out[post.Slug] = convertpost(post)
+	}
+	return out
+}
+
+func convertpages(pages []ghost.Page) map[string]StoredPost {
+	out := map[string]StoredPost{}
+	for _, page := range pages {
+		out[page.Slug] = convertpage(page)
+	}
+	return out
+}
+
+func convertpost(post ghost.Post) StoredPost {
 	stored := StoredPost{
 		Slug:        post.Slug,
 		Title:       post.Title,
@@ -83,47 +74,23 @@ func convertpost(post *GhostPost) *StoredPost {
 	}
 	gemtext, err := html2gemini.FromString(post.HTML, *html2gemini.NewTraverseContext(*html2gemini.NewOptions()))
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	stored.Content = gemtext
-	return &stored
-}
-func fetchcontent() map[string]*StoredPost {
-	key := os.Getenv(API_KEY)
-	localDb := map[string]*StoredPost{}
-	url := "http://localhost:2368/ghost/api/v4/content/posts/"
-	if _url := os.Getenv(URL); _url != "" {
-		url = _url
-	}
-	nextPage := 1
-	for {
-		res, err := http.Get(fmt.Sprintf("%s?limit=3&key=%s&page=%d", url, key, nextPage))
-		if err != nil {
-			panic(err)
-		}
-		var data GhostContent
-		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-			panic(nil)
-		}
-		log.Printf("fetching posts, page %d/%d", data.Meta.Pagination.Page, data.Meta.Pagination.Total)
-		for _, post := range data.Posts {
-			localDb[post.Slug] = convertpost(&post)
-		}
-		nextPage = data.Meta.Pagination.Next
-		if nextPage == 0 {
-			break
-		}
-	}
-
-	log.Printf("fetched %d posts", len(localDb))
-
-	//log.Println(localDb["welcome"].Content)
-	return localDb
+	return stored
 }
 
-func contentFetcher() {
-	for {
-		db = fetchcontent()
-		time.Sleep(1 * time.Hour)
+func convertpage(post ghost.Page) StoredPost {
+	stored := StoredPost{
+		Slug:        post.Slug,
+		Title:       post.Title,
+		PublishedAt: post.PublishedAt,
+		Excerpt:     post.Excerpt,
 	}
+	gemtext, err := html2gemini.FromString(post.HTML, *html2gemini.NewTraverseContext(*html2gemini.NewOptions()))
+	if err != nil {
+		log.Println(err)
+	}
+	stored.Content = gemtext
+	return stored
 }

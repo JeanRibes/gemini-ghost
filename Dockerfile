@@ -9,7 +9,8 @@ COPY go.sum .
 # téléchargement des dépendances
 RUN go mod download
 
-COPY *.go .
+COPY *.go ./
+COPY ghost ./ghost/
 
 # build Go
 RUN go build -o /main
@@ -18,9 +19,11 @@ RUN go build -o /main
 #COPY --from=builder /main .
 EXPOSE 1965
 WORKDIR /
-RUN adduser -DHu 1000 grissom
-USER grissom
+RUN adduser -DHu 1000 user
+USER user
+
 ADD index.tpl /
-ENV URL "http://localhost:2368/ghost/api/v4/content/posts/"
+ENV GHOST_URL "http://localhost:2368/ghost/api/v4/content"
 ENV API_KEY "get from ghost admin -> new integration -> content api key"
-CMD ["/main","-crt","/certs/crt.pem","-key","/certs/key.pem", "-hostname", "localhost", "-port", "1965"]
+ENV HOSTNAME "localhost"
+CMD /main -crt /certs/crt.pem -key /certs/key.pem -hostname $HOSTNAME -ghost-url $GHOST_URL -ghost-key $API_KEY

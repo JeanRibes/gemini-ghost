@@ -7,7 +7,10 @@ import (
 )
 
 func ghostResponse(conn io.ReadWriteCloser, path string) bool {
-	post, exists := db[path]
+	post, exists := db.Posts[path]
+	if !exists {
+		post, exists = db.Pages[path]
+	}
 	if !exists {
 		return false
 	}
@@ -25,7 +28,9 @@ func ghostIndex(conn io.ReadWriteCloser) bool {
 	}
 	sendResponseHeader(conn, statusSuccess, "text/gemini; lang=en; charset=utf-8")
 	err = tmpl.Execute(conn, map[string]interface{}{
-		"Posts": db,
+		"Posts":    db.Posts,
+		"Pages":    db.Pages,
+		"Settings": db.Settings,
 		"DateF": func(date time.Time) string {
 			return date.Format(time.ANSIC)
 		},
