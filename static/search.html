@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search demo</title>
+</head>
+<body>
+
+<h3>Search demo js</h3>
+<form onsubmit="event.preventDefault();search()">
+    <label for="query">Query</label>
+    <input id="query">
+    <button>Search</button>
+</form>
+<br/>
+<fieldset>
+    <ul id="results">
+
+    </ul>
+</fieldset>
+
+<script src="/static/search.js"></script>
+<script>
+    var sp = new SearchProvider("")
+    sp.search('api').then(console.log)
+
+    let queryinput = document.getElementById('query')
+    let resultsUl = document.getElementById('results')
+    function search() {
+        let query = queryinput.value
+        console.log(query)
+        sp.search(query).then(posts => {
+            resultsUl.innerHTML = ''
+            if (posts !== null) {
+                posts.forEach(post => {
+                    let result = document.createElement('li')
+                    result.innerText= post.title
+                    resultsUl.appendChild(result)
+                })
+            }
+
+
+        }).catch(err => {
+            console.log(err)
+        })
+    }
+</script>
+</body>
+</html>

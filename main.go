@@ -17,7 +17,7 @@ var (
 
 func main() {
 	flag.Parse()
-	go contentFetcher(*ghostUrl, *ghostKey)
+	go contentFetcher(*ghostUrl, *ghostKey, 60)
 
 	g := gig.Default()
 
@@ -27,8 +27,9 @@ func main() {
 
 	gig.Debug = false
 
+	go serveHttp(*ghostUrl)
 	if err := g.Run(*addr, *crtFilename, *keyFilename); err != nil {
-		log.Print(err)
+		log.Println(err)
 	}
 }
 

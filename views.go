@@ -2,10 +2,8 @@ package main
 
 import (
 	"github.com/JeanRibes/gemini-ghost/ghost"
-	"github.com/blevesearch/bleve/v2"
 	"github.com/pitr/gig"
 	"html/template"
-	"log"
 	"time"
 )
 
@@ -41,20 +39,10 @@ func ghostIndex(c gig.Context) error {
 
 func searchPost(c gig.Context) error {
 	query := input_helper(c, "Your query ?")
-	results, err := index.Search(bleve.NewSearchRequest(bleve.NewMatchQuery(query)))
+
+	posts, err := SearchPost(query)
 	if err != nil {
-		println(err.Error())
 		return err
-	}
-	log.Println(results.String())
-
-	posts := []StoredPost{}
-
-	for _, result := range results.Hits {
-		println("id:", result.ID)
-		if post, exists := db.Posts[result.ID]; exists {
-			posts = append(posts, post)
-		}
 	}
 
 	tmpl, err := template.ParseFiles("index.tpl")

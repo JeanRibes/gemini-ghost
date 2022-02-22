@@ -20,16 +20,20 @@ var index bleve.Index
 func init() {
 	index, _ = bleve.NewMemOnly(bleve.NewIndexMapping())
 }
-
-func contentFetcher(baseurl string, key string) {
-	api := ghost.New(baseurl, key)
+var api *ghost.ContentAPI
+func contentFetcher(baseurl string, key string, timeout_minutes int) {
+	api = ghost.New(baseurl, key)
 	for {
 		fetchContent(api)
-		time.Sleep(1 * time.Hour)
+		if timeout_minutes < 0 {
+			break
+		}
+		time.Sleep(time.Minute* time.Duration(timeout_minutes))
 	}
 }
 
 func fetchContent(api *ghost.ContentAPI) {
+	log.Println("fetching content from Ghost ...")
 	posts, err := api.AllPosts()
 	if err != nil {
 		log.Println(err)
@@ -49,15 +53,16 @@ func fetchContent(api *ghost.ContentAPI) {
 	}
 
 	indexposts(db.Posts)
+	log.Println("fetched content from Ghost")
 }
 
 type StoredPost struct {
-	Slug        string
-	Title       string
-	PublishedAt time.Time
-	Content     string
+	Slug        string `json:"slug"`
+	Title       string `json:"title"`
+	PublishedAt time.Time `json:"published_at"`
+	Content     string `json:"-"`
 
-	Excerpt string
+	Excerpt string `json:"excerpt"`
 }
 
 func convertposts(posts []ghost.Post) map[string]StoredPost {
@@ -112,4 +117,21 @@ func indexposts(posts map[string]StoredPost) {
 			panic(err)
 		}
 	}
+}
+
+func SearchPost(query string) (posts []StoredPost, err error){
+	results, err := index.Search(bleve.NewSearchRequest(bleve.NewMatchQuery(query)))
+	if err != nil {
+		return nil,err
+	}
+	log.Println(results.String())
+
+
+	for _, result := range results.Hits {
+		println("id:", result.ID)
+		if post, exists := db.Posts[result.ID]; exists {
+			posts = append(posts, post)
+		}
+	}
+	return posts,nil
 }
