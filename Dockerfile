@@ -23,6 +23,7 @@ RUN adduser -DHu 1000 user
 USER user
 
 ADD index.tpl /
+ADD static /static
 ENV GHOST_URL "http://localhost:2368/ghost/api/v4/content"
 ENV API_KEY "get from ghost admin -> new integration -> content api key"
 CMD /main -crt /certs/crt.pem -key /certs/key.pem -ghost-url $GHOST_URL -ghost-key $API_KEY
