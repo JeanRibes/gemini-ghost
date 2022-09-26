@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.17-alpine as builder
 
 WORKDIR /go/src/gemini-ghost
 
@@ -13,10 +13,12 @@ COPY *.go ./
 COPY ghost ./ghost/
 
 # build Go
-RUN go build -o /main
+ARG TARGETOS TARGETARCH
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /main
 
 #FROM alpine
 #COPY --from=builder /main .
+FROM alpine:3.16
 EXPOSE 1965
 WORKDIR /
 RUN adduser -DHu 1000 user
